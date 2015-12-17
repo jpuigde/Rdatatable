@@ -1,0 +1,273 @@
+---
+title: "data.table tips"
+author: "Jordi Puigdellivol"
+date: "17 de diciembre de 2015"
+output: ioslides_presentation
+---
+
+```{r,echo=FALSE}
+library(data.table)
+```
+
+
+# Introduction
+
+
+
+## what?
+
+Extension of Data.frame
+i.e. is.data.frame(DT) == TRUE
+
+ - Think data.table as a set of columns
+ - Every column is the same length but different type
+
+```{r}
+```
+
+
+## why?
+
+
+ - Reduce programming time, fewer function calls, less variable name repetition
+ - Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins, fast add/modify/delete of columns by group using no copies at all, list columns 
+ - Fast file reader (fread). 
+ - Offers a natural and flexible syntax, for faster development.
+
+```{r}
+```
+
+
+# how?
+```{r}
+```
+## General Form
+
+mtcarsDT[  
+<span class="blue">
+  mpg > 20
+</span>,  
+<span class="green">
+  .(Avgmean = mean( hp ),
+    "minWT(kg)"= min( wt*453.6 ))
+</span>,  
+<span class="yellow3">
+by =.(cyl,under5gear = gear < 5 )
+</span>  
+]
+
+<div class="columns-2">
+
+
+<div class="columns-2">
+R:  
+SQL:  
+
+
+<span class="blue"> i </span>  
+<span class="blue"> where </span>  
+
+
+</div>  
+
+
+<div class="columns-2">
+<span class="green"> j </span>  
+<span class="green"> select </span>  
+
+
+<span class="yellow3"> by = </span>  
+<span class="yellow3"> group by </span>  
+
+
+</div>
+
+
+</div>
+
+## Readed
+
+Take <span class="black"> mtcarsDT </span>, subset using <span class="blue"> i </span>, then calculate <span class="green"> j </span> grouped by <span class="yellow3"> by </span>
+
+```{r Readed}
+mtcarsDT <- as.data.table(mtcars)
+mtcarsDT[
+  mpg > 20,
+  .(Avgmean = mean( hp ),
+    "minWT(kg)"= min( wt*453.6 )),
+  by =.(cyl,under5gear = gear < 5 )
+  ]
+```
+
+## Create
+
+```{r Create}
+DT <- data.table( A = 1:6 , B = c("a","b","c") ,
+                  C = rnorm(6) , D = TRUE )
+DT
+```
+
+## Print
+
+```{r Print}
+DT2 <- data.table( A = 1:10000000 , B = letters[1:20] ,
+                   C = rnorm(10000000) , D = TRUE)
+DT2
+```
+
+## Subseting
+
+<div class="columns-2">
+
+```{r SubsetingA}
+DT[ 3:5 , ] # or DT[ 3:5 ]
+```
+
+```{r SubsetingB}
+DT[ B == "a" ]
+```
+
+```{r SubsetingD}
+DT[ B %in% c("a","c") ]
+```
+
+```{r SubsetingE}
+DT[ between(C,-0.5,0.5) ]
+```
+
+
+</div>
+
+## Selecting columns
+
+```{r selecting}
+DT[, .(B, C)]
+```
+
+NB: .() is an alias to list() in
+data.tables and they mean
+the same.
+
+##Computing on columns
+
+<div class="columns-2">
+<span>
+```{r ComputingA}
+DT
+```
+</span>
+
+
+<span>
+```{r ComputingB}
+DT[, .(Total = sum(A),
+       Mean = mean(C))]
+
+DT[, .(paste0(B,collapse=""))]
+```
+  
+</span>
+</div>
+
+## Recycling
+```{r Recycling}
+DT[, .(B,C=sum(C))]
+```
+
+
+## Throw anything
+```{r Throw_anything}
+DT[, plot(A,C)]
+```
+
+## Anything
+```{r Throw_anything_2}
+DT[, { print(A)
+       hist(C)
+       NULL}]
+```
+
+
+
+
+
+
+
+
+##Performance
+
+```{r perfornamce1,echo=FALSE}
+DF <- as.data.frame(DT2)
+setkey(DT2,"B")
+```
+
+<div class="columns-2">
+```{r dimensions}
+dim(DF)
+```
+
+```{r dimensions2}
+dim(DT2)
+```
+
+</div>
+
+<div class="columns-2">
+```{r perfornamce1A,eval=FALSE,echo=TRUE}
+DF[DF$B=="a" ,] 
+DT2[.("a"),] )
+```
+
+```{r perfornamce1B,eval=TRUE,echo=FALSE}
+system.time( DF[DF$B=="a" ,] )
+system.time( DT2[.("a"),] )
+
+```
+
+
+```{r perfornamce2A,eval=FALSE,echo=TRUE}
+tapply(DF$C,DF$B,sum)
+DT2[,sum(C),by=B]
+
+```
+
+```{r perfornamce2B,eval=TRUE,echo=FALSE}
+system.time( tapply(DF$C,DF$B,sum) )
+system.time( DT2[,sum(C),by=B] )
+```
+
+
+</div>
+
+
+
+
+
+
+
+#other cool staff
+
+
+```{r}
+```
+
+
+
+```{r}
+```
+
+## Slide with Plot
+
+```{r, echo=FALSE}
+```
+
+# References
+
+***
+
+  - [datacamp](https://www.datacamp.com/courses/data-analysis-the-data-table-way)
+  - [user2014](http://user2014.stat.ucla.edu/files/tutorial_Matt.pdf)
+  - [Pakage pdf](https://cran.r-project.org/web/packages/data.table/data.table.pdf)
+  - [Pakage wiki](https://github.com/Rdatatable/data.table/wiki)
+  - [Slides](https://github.com/jpuigde/Rdatatable)
+
